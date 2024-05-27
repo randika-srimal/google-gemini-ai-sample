@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  chatbot-db:
+    image: postgres
+    container_name: chatbot-db-container
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=DB
+    ports:
+      - '5432:5432'
+    volumes:
+      - chatbot-db-data:/var/lib/postgresql/data
+
+  chatbot-db-admin:
+    image: dpage/pgadmin4
+    depends_on:
+      - chatbot-db
+    container_name: chatbot-db-admin-container
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=email2randika@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+    ports:
+      - '8002:80'
+    volumes:
+      - chatbot-db-admin-data:/var/lib/pgadmin
+
+  chatbot-api:
+    depends_on:
+        - chatbot-db
+    container_name: chatbot-api-container
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: tail -F /dev/null
+
+volumes:
+  chatbot-db-data:
+  chatbot-db-admin-data:
