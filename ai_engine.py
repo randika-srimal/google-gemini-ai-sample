@@ -1,3 +1,4 @@
+import google.generativeai as genai
 import mysql.connector
 import os
 from dotenv import load_dotenv
@@ -93,11 +94,31 @@ def build_prompt(question, query=None, query_output=None, chat_messages=None):
     {rules}
     """
 
+def query_gemini_ai(prompt):
+    genai.configure(api_key=os.getenv('GOOGLE_GEMINI_API_KEY'))
+    
+    model = genai.GenerativeModel('gemini-pro')
+    response = model.generate_content(prompt)
+
+    return response.text
+
 def get_query(question): 
     prompt = build_prompt(question)
-    print(prompt)
+    query = query_gemini_ai(prompt)
+    query = query.strip()
+ 
+    query_safety_check(query)
+ 
+    return query
+
+def query_safety_check(query):
+    banned_actions = ['insert', 'update', 'delete', 'alter', 'drop', 'truncate', 'create', 'replace']
+ 
+    if any(action in query for action in banned_actions):
+        raise Exception("Query is not safe")
  
 def generate_response(question):
-    get_query(question)
+    query = get_query(question)
+    print(query)
  
     return "I'm sorry, I don't know the answer to that question. Please try again."
