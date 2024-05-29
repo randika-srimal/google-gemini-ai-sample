@@ -1,6 +1,6 @@
 FROM python:3.9.15-alpine
 
-RUN apk update && apk add --no-cache bash nano
+RUN apk update && apk add --no-cache g++ bash nano
 
 WORKDIR /home
 
