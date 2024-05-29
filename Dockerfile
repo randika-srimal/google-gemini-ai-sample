@@ -1,6 +1,6 @@
-FROM python:3.9.15-alpine
+FROM python:3.12-slim
 
-RUN apk update && apk add --no-cache g++ bash nano
+RUN apt update && apt install -y bash nano
 
 WORKDIR /home
 
