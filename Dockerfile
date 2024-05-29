@@ -1,9 +1,11 @@
 FROM python:3.9.15-alpine
 
-RUN apk update && apk add --no-cache bash
+RUN apk update && apk add --no-cache bash nano
 
 WORKDIR /home
 
+RUN pip install --no-cache-dir --upgrade pip
+
 COPY ./requirements.txt .
 
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt

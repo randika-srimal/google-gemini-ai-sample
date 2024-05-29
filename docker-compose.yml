@@ -33,6 +33,8 @@ services:
     depends_on:
         - chatbot-mariadb
     container_name: chatbot-api-container
+    volumes:
+      - ./:/home:delegated
     build: 
       context: .
       dockerfile: Dockerfile
