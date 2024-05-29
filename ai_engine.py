@@ -1,4 +1,4 @@
-from openai import OpenAI
+import google.generativeai as genai
 import mysql.connector
 import os
 from dotenv import load_dotenv
@@ -64,23 +64,17 @@ def build_prompt(question, query=None, query_output=None, chat_messages=None):
                  "quotes.Omit SQLQuery: from your answer)")
  
     return f"""
-    You are a Human Resource Manager in a Software Company. Information about all the developers working are provided in the Context section of the question. Your main job is to help a person to find matching employees that would fit his needs. You should ask for more information about what type of work the manager wants, but you should not exceed the information given in the context.
- 
+    Output Results as per the Guidelines
+    
+    You are a Human Resource Manager in a Software Company. Your main job is to help a person to find matching employees that would fit his needs. 
+    You should ask for more information about what type of work the manager wants, but you should not exceed the information given in the context.
     Given an input question, first create a syntactically correct MySQL query to run, then look at the results of the query and return the answer.
     Use the following format:
-    
-    ---
-    
-    Guidelines
     
     Question: "User question here"
     SQLQuery: "SQL Query used to generate the result (if applicable)"
     SQLResult: "Result of the SQLQuery (if applicable)"
     Answer: "Final answer here (You fill this in with the SQL query only)"
-    
-    ---
-    
-    Context
     
     Only use the following tables and columns:
     
@@ -90,30 +84,20 @@ def build_prompt(question, query=None, query_output=None, chat_messages=None):
     Question: "{question}"
     {query_prompt}
     
-    ---
-    
     {rules}
     """
 
-def query_open_ai(prompt, temperature=0.7):
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"),)
-    completions = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {
-                "role": "system",
-                "content": prompt
-            }
-        ],
-        temperature=temperature,
-        max_tokens=100,
-    )
- 
-    return completions.choices[0].message.content
+def query_gemini_ai(prompt):
+    genai.configure(api_key=os.getenv('GOOGLE_GEMINI_API_KEY'))
+    
+    model = genai.GenerativeModel('gemini-pro')
+    response = model.generate_content(prompt)
+
+    return response.text
 
 def get_query(question): 
     prompt = build_prompt(question)
-    query = query_open_ai(prompt)
+    query = query_gemini_ai(prompt)
     query = query.strip()
  
     query_safety_check(query)
@@ -136,11 +120,8 @@ def get_query_results_from_database(query):
     return json.dumps(employees, indent=4, default=str)
  
 def generate_response(question, chat_messages=None):
-    # try:
-        query = get_query(question)
-        query_output = get_query_results_from_database(query)
-        retry_query_prompt = build_prompt(question, query, query_output, chat_messages=chat_messages)
-        generated_query = query_open_ai(retry_query_prompt)
-        return generated_query.strip().strip('"')
-    # except:
-    #     return "I'm sorry, I don't know the answer to that question. Please try again."
+    query = get_query(question)
+    query_output = get_query_results_from_database(query)
+    retry_query_prompt = build_prompt(question, query, query_output, chat_messages=chat_messages)
+    generated_query = query_gemini_ai(retry_query_prompt)
+    return generated_query.strip().strip('"')
