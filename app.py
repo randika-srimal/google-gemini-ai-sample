@@ -1,5 +1,5 @@
 import ai_engine
  
-question = "What are the skills of Chethana?"
+question = input("Enter your question:")
  
 print(ai_engine.generate_response(question))

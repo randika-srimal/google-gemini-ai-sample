@@ -58,7 +58,7 @@ def build_prompt(question, query=None, query_output=None, chat_messages=None):
         query_prompt += "SQLQuery: " + query + "\n"
         if query_output:
             query_prompt += "SQLResult: " + query_output + "\n"
-        rules = "Answer: "
+        rules = "Answer: Above SQLResult: in a human friendly language"
     else:
         rules = ("(Your answer HERE must be a syntactically correct MySQL query with no extra information or "
                  "quotes.Omit SQLQuery: from your answer)")
@@ -121,7 +121,19 @@ def get_query_results_from_database(query):
  
 def generate_response(question, chat_messages=None):
     query = get_query(question)
+    # print("*" * 50 + "QUERY" + "*" * 50)
+    # print(query)
+    # print("*" * 50 + "QUERY" + "*" * 50)
     query_output = get_query_results_from_database(query)
+    # print("*" * 50 + "QUERY OUTPUT" + "*" * 50)
+    # print(query_output)
+    # print("*" * 50 + "QUERY OUTPUT" + "*" * 50)
     retry_query_prompt = build_prompt(question, query, query_output, chat_messages=chat_messages)
+    # print("*" * 50 + "RETRY QUERY PROMPT" + "*" * 50)
+    # print(retry_query_prompt)
+    # print("*" * 50 + "RETRY QUERY PROMPT" + "*" * 50)
     generated_query = query_gemini_ai(retry_query_prompt)
+    # print("*" * 50 + "GENERATED QUERY" + "*" * 50)
+    # print(generated_query)
+    # print("*" * 50 + "GENERATED QUERY" + "*" * 50)
     return generated_query.strip().strip('"')
