@@ -1,34 +1,37 @@
 version: '3.9'
 
 services:
-  chatbot-db:
-    image: postgres
-    container_name: chatbot-db-container
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=DB
+  chatbot-mariadb:
+    image: mariadb:10.8.3
+    container_name: chatbot-mariadb-container
+    command:
+      [
+        '--default-time-zone=+00:00',
+        '--default-authentication-plugin=mysql_native_password'
+      ]
     ports:
-      - '5432:5432'
+      - 3307:3306
+    environment:
+      - MARIADB_ROOT_PASSWORD=root
     volumes:
-      - chatbot-db-data:/var/lib/postgresql/data
+      - chatbot-mariadb-data:/var/lib/mysql
 
-  chatbot-db-admin:
-    image: dpage/pgadmin4
-    depends_on:
-      - chatbot-db
-    container_name: chatbot-db-admin-container
+  chatbot-phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: chatbot-phpmyadmin-container
     environment:
-      - PGADMIN_DEFAULT_EMAIL=email2randika@gmail.com
-      - PGADMIN_DEFAULT_PASSWORD=root
+      - PMA_HOST=chatbot-mariadb
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+      - UPLOAD_LIMIT=120M
     ports:
-      - '8002:80'
-    volumes:
-      - chatbot-db-admin-data:/var/lib/pgadmin
+      - "8002:80"
+    depends_on:
+      - chatbot-mariadb
 
   chatbot-api:
     depends_on:
-        - chatbot-db
+        - chatbot-mariadb
     container_name: chatbot-api-container
     build: 
       context: .
@@ -36,5 +39,4 @@ services:
     command: tail -F /dev/null
 
 volumes:
-  chatbot-db-data:
-  chatbot-db-admin-data:
+  chatbot-mariadb-data:
